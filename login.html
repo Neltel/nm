@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema de login seguro">
+    <meta name="theme-color" content="#6366F1">
+    <title>Login - Novo Sistema</title>
+    
+    <style>
+        /* ====================================================================
+           RESET E VARIÁVEIS CSS
+           ==================================================================== */
+        
+        :root {
+            --cor-primaria: #6366F1;
+            --cor-primaria-escuro: #4F46E5;
+            --cor-primaria-claro: #818CF8;
+            --cor-sucesso: #10B981;
+            --cor-erro: #EF4444;
+            --cor-aviso: #F59E0B;
+            --cor-fundo: #0F172A;
+            --cor-fundo-cartao: #1E293B;
+            --cor-fundo-input: #334155;
+            --cor-texto: #E2E8F0;
+            --cor-texto-secundario: #CBD5E1;
+            --cor-borda: #475569;
+            --cor-borda-foco: #6366F1;
+            --sombra-leve: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --sombra-media: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --sombra-forte: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --transicao-rapida: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transicao-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, var(--cor-fundo) 0%, #0F1419 100%);
+            color: var(--cor-texto);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        /* ====================================================================
+           ELEMENTOS DE FUNDO DECORATIVOS
+           ==================================================================== */
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            right: -10%;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: 0;
+            pointer-events: none;
+            animation: flutuarGrande 20s ease-in-out infinite;
+        }
+        
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -30%;
+            left: -5%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: 0;
+            pointer-events: none;
+            animation: flutuarPequeno 25s ease-in-out infinite;
+        }
+        
+        /* ====================================================================
+           ANIMAÇÕES
+           ==================================================================== */
+        
+        @keyframes flutuarGrande {
+            0%, 100% { transform: translateY(0px) translateX(0px); }
+            50% { transform: translateY(30px) translateX(10px); }
+        }
+        
+        @keyframes flutuarPequeno {
+            0%, 100% { transform: translateY(0px) translateX(0px); }
+            50% { transform: translateY(-30px) translateX(-10px); }
+        }
+        
+        @keyframes aparecimento {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulsacao {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        /* ====================================================================
+           CONTAINER PRINCIPAL
+           ==================================================================== */
+        
+        .container-login {
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+            position: relative;
+            z-index: 10;
+            animation: aparecimento 0.6s ease-out forwards;
+        }
+        
+        /* ====================================================================
+           CARTÃO DE LOGIN
+           ==================================================================== */
+        
+        .cartao-login {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 16px;
+            padding: 48px 32px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cartao-login::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, rgba(99, 102, 241, 0.3), transparent);
+            z-index: 1;
+        }
+        
+        /* ====================================================================
+           CABEÇALHO DO LOGIN
+           ==================================================================== */
+        
+        .cabecalho-login {
+            text-align: center;
+            margin-bottom: 32px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .logo {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 16px;
+            background: linear-gradient(135deg, var(--cor-primaria) 0%, var(--cor-primaria-claro) 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.3);
+        }
+        
+        .titulo {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--cor-primaria) 0%, var(--cor-primaria-claro) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitulo {
+            font-size: 14px;
+            color: var(--cor-texto-secundario);
+            margin-top: 8px;
+        }
+        
+        /* ====================================================================
+           FORMULÁRIO
+           ==================================================================== */
+        
+        .formulario {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .grupo-formulario {
+            margin-bottom: 20px;
+        }
+        
+        .grupo-formulario:last-of-type:not(.grupo-formulario-checkbox) {
+            margin-bottom: 24px;
+        }
+        
+        .label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--cor-texto-secundario);
+            transition: color var(--transicao-rapida);
+        }
+        
+        .input {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 14px;
+            background-color: var(--cor-fundo-input);
+            border: 1.5px solid var(--cor-borda);
+            border-radius: 8px;
+            color: var(--cor-texto);
+            transition: all var(--transicao-normal);
+            font-family: inherit;
+        }
+        
+        .input::placeholder {
+            color: var(--cor-texto-secundario);
+        }
+        
+        .input:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+        
+        .input:focus {
+            outline: none;
+            border-color: var(--cor-borda-foco);
+            background-color: rgba(99, 102, 241, 0.05);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .input:disabled {
+            background-color: var(--cor-borda);
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        
+        /* Validação do formulário */
+        .input.erro {
+            border-color: var(--cor-erro);
+            animation: shake 0.4s ease-in-out;
+        }
+        
+        .input.erro:focus {
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+        
+        .input.sucesso {
+            border-color: var(--cor-sucesso);
+        }
+        
+        .mensagem-erro {
+            font-size: 13px;
+            color: var(--cor-erro);
+            margin-top: 6px;
+            display: none;
+            animation: aparecimento 0.3s ease-out forwards;
+        }
+        
+        .input.erro ~ .mensagem-erro {
+            display: block;
+        }
+        
+        /* ====================================================================
+           CHECKBOX LEMBRAR-ME
+           ==================================================================== */
+        
+        .grupo-formulario-checkbox {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            accent-color: var(--cor-primaria);
+            cursor: pointer;
+            margin-right: 8px;
+            border-radius: 4px;
+        }
+        
+        .label-checkbox {
+            font-size: 14px;
+            color: var(--cor-texto-secundario);
+            cursor: pointer;
+            transition: color var(--transicao-rapida);
+            margin: 0;
+        }
+        
+        .label-checkbox:hover {
+            color: var(--cor-texto);
+        }
+        
+        /* ====================================================================
+           BOTÃO DE LOGIN
+           ==================================================================== */
+        
+        .botao-login {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 16px;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--cor-primaria) 0%, var(--cor-primaria-escuro) 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all var(--transicao-normal);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3);
+        }
+        
+        .botao-login::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: left var(--transicao-normal);
+        }
+        
+        .botao-login:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -5px rgba(99, 102, 241, 0.4);
+        }
+        
+        .botao-login:hover:not(:disabled)::before {
+            left: 100%;
+        }
+        
+        .botao-login:active:not(:disabled) {
+            transform: translateY(0px);
+        }
+        
+        .botao-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            animation: pulsacao 1.5s ease-in-out infinite;
+        }
+        
+        .botao-login__texto {
+            position: relative;
+            z-index: 2;
+        }
+        
+        /* ====================================================================
+           ALERTAS
+           ==================================================================== */
+        
+        .alerta {
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+            animation: aparecimento 0.3s ease-out forwards;
+            border-left: 4px solid;
+        }
+        
+        .alerta.exibindo {
+            display: block;
+        }
+        
+        .alerta-erro {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: #FCA5A5;
+            border-color: var(--cor-erro);
+        }
+        
+        .alerta-sucesso {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: #86EFAC;
+            border-color: var(--cor-sucesso);
+        }
+        
+        /* ====================================================================
+           LINKS E RODAPÉ
+           ==================================================================== */
+        
+        .rodape-login {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(99, 102, 241, 0.1);
+            position: relative;
+            z-index: 2;
+        }
+        
+        .rodape-login p {
+            font-size: 13px;
+            color: var(--cor-texto-secundario);
+        }
+        
+        .link {
+            color: var(--cor-primaria);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all var(--transicao-rapida);
+            position: relative;
+        }
+        
+        .link:hover {
+            color: var(--cor-primaria-claro);
+        }
+        
+        .link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--cor-primaria);
+            transition: width var(--transicao-normal);
+        }
+        
+        .link:hover::after {
+            width: 100%;
+        }
+        
+        /* ====================================================================
+           RESPONSIVO
+           ==================================================================== */
+        
+        @media (max-width: 480px) {
+            .container-login {
+                padding: 12px;
+            }
+            
+            .cartao-login {
+                padding: 32px 20px;
+                border-radius: 12px;
+            }
+            
+            .cabecalho-login {
+                margin-bottom: 24px;
+            }
+            
+            .titulo {
+                font-size: 24px;
+            }
+            
+            .subtitulo {
+                font-size: 13px;
+            }
+            
+            .logo {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+                margin-bottom: 12px;
+            }
+            
+            .grupo-formulario {
+                margin-bottom: 16px;
+            }
+            
+            .input {
+                padding: 11px 12px;
+                font-size: 16px; /* Previne zoom no iOS */
+            }
+        }
+        
+        /* ====================================================================
+           MODO ESCURO (Padrão)
+           ==================================================================== */
+        
+        @media (prefers-color-scheme: light) {
+            :root {
+                --cor-fundo: #F8FAFC;
+                --cor-fundo-cartao: #FFFFFF;
+                --cor-fundo-input: #E2E8F0;
+                --cor-texto: #0F172A;
+                --cor-texto-secundario: #475569;
+                --cor-borda: #CBD5E1;
+            }
+            
+            .cartao-login {
+                background: rgba(255, 255, 255, 0.9);
+                border-color: rgba(99, 102, 241, 0.1);
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            }
+            
+            body::before {
+                background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+            }
+            
+            body::after {
+                background: radial-gradient(circle, rgba(99, 102, 241, 0.05) 0%, transparent 70%);
+            }
+        }
+        
+        /* ====================================================================
+           ACESSIBILIDADE
+           ==================================================================== */
+        
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container-login">
+        <div class="cartao-login">
+            <!-- Cabeçalho do Login -->
+            <div class="cabecalho-login">
+                <div class="logo">N</div>
+                <h1 class="titulo">Novo Sistema</h1>
+                <p class="subtitulo">Acesse sua conta de forma segura</p>
+            </div>
+            
+            <!-- Alertas -->
+            <div class="alerta alerta-erro" id="alertaErro" role="alert">
+                <span id="textoErro"></span>
+            </div>
+            
+            <div class="alerta alerta-sucesso" id="alertaSucesso" role="alert">
+                Login realizado com sucesso! Redirecionando...
+            </div>
+            
+            <!-- Formulário de Login -->
+            <form class="formulario" id="formularioLogin" novalidate>
+                <!-- Campo de Email -->
+                <div class="grupo-formulario">
+                    <label for="email" class="label">Email</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        class="input"
+                        placeholder="seu@email.com"
+                        required
+                        aria-label="Email"
+                        aria-required="true"
+                        autocomplete="email"
+                    >
+                    <div class="mensagem-erro" id="erroEmail">
+                        Insira um email válido
+                    </div>
+                </div>
+                
+                <!-- Campo de Senha -->
+                <div class="grupo-formulario">
+                    <label for="senha" class="label">Senha</label>
+                    <input
+                        type="password"
+                        id="senha"
+                        name="senha"
+                        class="input"
+                        placeholder="Digite sua senha"
+                        required
+                        aria-label="Senha"
+                        aria-required="true"
+                        autocomplete="current-password"
+                    >
+                    <div class="mensagem-erro" id="erroSenha">
+                        A senha é obrigatória
+                    </div>
+                </div>
+                
+                <!-- Checkbox Lembrar-me -->
+                <div class="grupo-formulario-checkbox">
+                    <input
+                        type="checkbox"
+                        id="lembrarme"
+                        name="lembrarme"
+                        class="checkbox"
+                        aria-label="Lembrar-me neste dispositivo"
+                    >
+                    <label for="lembrarme" class="label-checkbox">
+                        Lembrar-me neste dispositivo
+                    </label>
+                </div>
+                
+                <!-- Botão de Login -->
+                <button
+                    type="submit"
+                    class="botao-login"
+                    id="botaoLogin"
+                    aria-label="Entrar no sistema"
+                >
+                    <span class="botao-login__texto">Entrar</span>
+                </button>
+            </form>
+            
+            <!-- Rodapé do Login -->
+            <div class="rodape-login">
+                <p>
+                    Esqueceu sua senha?
+                    <a href="/recuperar-senha" class="link">Recuperar</a>
+                </p>
+                <p style="margin-top: 8px;">
+                    Não tem conta?
+                    <a href="/cadastro" class="link">Criar conta</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Script de Validação e Autenticação -->
+    <script>
+        // ====================================================================
+        // CONSTANTES E CONFIGURAÇÕES
+        // ====================================================================
+        
+        const CONFIG = {
+            API_URL: '/api/auth.php',
+            TIMEOUT: 10000, // 10 segundos
+            REGEX_EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+            MENSAGENS: {
+                ENVIANDO: 'Autenticando...',
+                SUCESSO: 'Login realizado com sucesso!',
+                ERRO_GENERICO: 'Erro ao conectar com o servidor. Tente novamente.',
+                ERRO_EMAIL: 'Insira um email válido',
+                ERRO_SENHA: 'A senha é obrigatória',
+                ERRO_EMAIL_VAZIO: 'O email é obrigatório',
+                ERRO_SENHA_VAZIA: 'A senha é obrigatória',
+                ERRO_AUTENTICACAO: 'Email ou senha inválidos',
+                ERRO_SERVIDOR: 'Erro do servidor. Tente mais tarde.',
+                TEMPO_ESGOTADO: 'A requisição demorou muito tempo. Tente novamente.'
+            }
+        };
+        
+        // ====================================================================
+        // ELEMENTOS DO DOM
+        // ====================================================================
+        
+        const formulario = document.getElementById('formularioLogin');
+        const campoEmail = document.getElementById('email');
+        const campoSenha = document.getElementById('senha');
+        const checkboxLembrarme = document.getElementById('lembrarme');
+        const botaoLogin = document.getElementById('botaoLogin');
+        const alertaErro = document.getElementById('alertaErro');
+        const textoErro = document.getElementById('textoErro');
+        const alertaSucesso = document.getElementById('alertaSucesso');
+        
+        // ====================================================================
+        // FUNÇÕES DE VALIDAÇÃO
+        // ====================================================================
+        
+        /**
+         * Valida o formato de um email
+         * @param {string} email - Email a validar
+         * @returns {boolean} True se email válido
+         */
+        function validarEmail(email) {
+            return CONFIG.REGEX_EMAIL.test(email) && email.length > 0;
+        }
+        
+        /**
+         * Valida se a senha tem conteúdo
+         * @param {string} senha - Senha a validar
+         * @returns {boolean} True se senha válida
+         */
+        function validarSenha(senha) {
+            return senha.length > 0;
+        }
+        
+        /**
+         * Remove erro visual de um campo
+         * @param {HTMLElement} campo - Campo a limpar
+         */
+        function limparErro(campo) {
+            campo.classList.remove('erro');
+            campo.classList.remove('sucesso');
+        }
+        
+        /**
+         * Exibe erro visual em um campo
+         * @param {HTMLElement} campo - Campo para mostrar erro
+         */
+        function mostrarErro(campo) {
+            campo.classList.add('erro');
+            campo.classList.remove('sucesso');
+        }
+        
+        /**
+         * Exibe alerta de erro
+         * @param {string} mensagem - Mensagem de erro
+         */
+        function exibirAlertaErro(mensagem) {
+            textoErro.textContent = mensagem;
+            alertaErro.classList.add('exibindo');
+            alertaSucesso.classList.remove('exibindo');
+        }
+        
+        /**
+         * Oculta alerta de erro
+         */
+        function ocultarAlertaErro() {
+            alertaErro.classList.remove('exibindo');
+        }
+        
+        /**
+         * Exibe alerta de sucesso
+         */
+        function exibirAlertaSucesso() {
+            alertaSucesso.classList.add('exibindo');
+            alertaErro.classList.remove('exibindo');
+        }
+        
+        /**
+         * Define o estado de carregamento do botão
+         * @param {boolean} carregando - True para ativar, false para desativar
+         */
+        function definirCarregando(carregando) {
+            botaoLogin.disabled = carregando;
+            botaoLogin.querySelector('.botao-login__texto').textContent =
+                carregando ? CONFIG.MENSAGENS.ENVIANDO : 'Entrar';
+        }
+        
+        // ====================================================================
+        // VALIDAÇÃO EM TEMPO REAL
+        // ====================================================================
+        
+        /**
+         * Valida email em tempo real
+         */
+        campoEmail.addEventListener('blur', function() {
+            const email = this.value.trim();
+            
+            if (!email) {
+                mostrarErro(this);
+                return;
+            }
+            
+            if (!validarEmail(email)) {
+                mostrarErro(this);
+            } else {
+                limparErro(this);
+            }
+        });
+        
+        /**
+         * Valida senha em tempo real
+         */
+        campoSenha.addEventListener('blur', function() {
+            if (!validarSenha(this.value)) {
+                mostrarErro(this);
+            } else {
+                limparErro(this);
+            }
+        });
+        
+        /**
+         * Remove erro ao digitar
+         */
+        campoEmail.addEventListener('input', function() {
+            if (this.classList.contains('erro')) {
+                limparErro(this);
+            }
+        });
+        
+        campoSenha.addEventListener('input', function() {
+            if (this.classList.contains('erro')) {
+                limparErro(this);
+            }
+        });
+        
+        // ====================================================================
+        // ENVIO DO FORMULÁRIO
+        // ====================================================================
+        
+        /**
+         * Envia o formulário de login para o servidor
+         */
+        formulario.addEventListener('submit', async function(evento) {
+            evento.preventDefault();
+            
+            // Limpa alertas anteriores
+            ocultarAlertaErro();
+            
+            // Obtém valores dos campos
+            const email = campoEmail.value.trim();
+            const senha = campoSenha.value;
+            
+            // Valida campos
+            let temErro = false;
+            
+            if (!email) {
+                mostrarErro(campoEmail);
+                exibirAlertaErro(CONFIG.MENSAGENS.ERRO_EMAIL_VAZIO);
+                temErro = true;
+            } else if (!validarEmail(email)) {
+                mostrarErro(campoEmail);
+                exibirAlertaErro(CONFIG.MENSAGENS.ERRO_EMAIL);
+                temErro = true;
+            }
+            
+            if (!senha) {
+                mostrarErro(campoSenha);
+                if (!temErro) exibirAlertaErro(CONFIG.MENSAGENS.ERRO_SENHA_VAZIA);
+                temErro = true;
+            }
+            
+            if (temErro) {
+                return;
+            }
+            
+            // Limpa erros visuais
+            limparErro(campoEmail);
+            limparErro(campoSenha);
+            
+            // Define estado de carregamento
+            definirCarregando(true);
+            
+            try {
+                // Cria um AbortController para timeout
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), CONFIG.TIMEOUT);
+                
+                // Envia requisição para API
+                const resposta = await fetch(CONFIG.API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        senha: senha,
+                        lembrarme: checkboxLembrarme.checked
+                    }),
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeout);
+                
+                // Trata resposta
+                const dados = await resposta.json();
+                
+                if (!resposta.ok) {
+                    // Erro de autenticação
+                    exibirAlertaErro(
+                        dados.mensagem || CONFIG.MENSAGENS.ERRO_AUTENTICACAO
+                    );
+                    definirCarregando(false);
+                    return;
+                }
+                
+                // Login bem-sucedido
+                if (dados.sucesso) {
+                    exibirAlertaSucesso();
+                    
+                    // Armazena token se fornecido
+                    if (dados.dados && dados.dados.token) {
+                        sessionStorage.setItem('auth_token', dados.dados.token);
+                    }
+                    
+                    // Aguarda um pouco e redireciona
+                    setTimeout(() => {
+                        const urlRedirecao = dados.dados?.urlRedirecao || '/';
+                        window.location.href = urlRedirecao;
+                    }, 1000);
+                } else {
+                    exibirAlertaErro(
+                        dados.mensagem || CONFIG.MENSAGENS.ERRO_AUTENTICACAO
+                    );
+                    definirCarregando(false);
+                }
+                
+            } catch (erro) {
+                definirCarregando(false);
+                
+                if (erro.name === 'AbortError') {
+                    exibirAlertaErro(CONFIG.MENSAGENS.TEMPO_ESGOTADO);
+                } else {
+                    console.error('Erro ao fazer login:', erro);
+                    exibirAlertaErro(CONFIG.MENSAGENS.ERRO_GENERICO);
+                }
+            }
+        });
+        
+        // ====================================================================
+        // FUNCIONALIDADES ADICIONAIS
+        // ====================================================================
+        
+        // Foco automático no campo de email ao carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            campoEmail.focus();
+        });
+        
+        // Previne submissão múltipla enquanto está enviando
+        formulario.addEventListener('submit', function(e) {
+            if (botaoLogin.disabled) {
+                e.preventDefault();
+            }
+        });
+        
+        // Armazena preferência de "lembrar-me"
+        if (localStorage.getItem('lembrar_email')) {
+            const emailArmazenado = localStorage.getItem('email_usuario');
+            if (emailArmazenado) {
+                campoEmail.value = emailArmazenado;
+                checkboxLembrarme.checked = true;
+            }
+        }
+        
+        checkboxLembrarme.addEventListener('change', function() {
+            if (this.checked) {
+                const email = campoEmail.value.trim();
+                if (email && validarEmail(email)) {
+                    localStorage.setItem('lembrar_email', 'true');
+                    localStorage.setItem('email_usuario', email);
+                }
+            } else {
+                localStorage.removeItem('lembrar_email');
+                localStorage.removeItem('email_usuario');
+            }
+        });
+        
+    </script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+# ============================================================================
+# ARQUIVO DE CONFIGURAÇÃO DO APACHE
+# ============================================================================
+# 
+# Este arquivo contém as regras de reescrita de URL, configurações de 
+# segurança e controle de acesso para a aplicação.
+#
+# Funcionalidades:
+# - Ativa o módulo de reescrita de URL (mod_rewrite)
+# - Redireciona todas as requisições para index.php
+# - Define cabeçalhos de segurança
+# - Bloqueia acesso a arquivos sensíveis
+# - Define regras de cache
+#
+# ============================================================================
+
+# ============================================================================
+# MÓDULO DE REESCRITA DE URL
+# ============================================================================
+
+<IfModule mod_rewrite.c>
+    # Ativa o módulo mod_rewrite
+    RewriteEngine On
+    
+    # Define o diretório base para reescrita
+    RewriteBase /
+    
+    # ========================================================================
+    # REGRAS DE PROTEÇÃO - Bloqueiam acesso a arquivos sensíveis
+    # ========================================================================
+    
+    # Bloqueia acesso direto a diretórios que não devem ser acessíveis
+    RewriteRule ^(config|logs|vendor|app)/ - [F,L]
+    
+    # Bloqueia acesso a arquivos .env
+    RewriteRule ^\.env$ - [F,L]
+    
+    # Bloqueia acesso a arquivos .git
+    RewriteRule ^\.git/ - [F,L]
+    
+    # Bloqueia acesso a arquivos de backup
+    RewriteRule \.(bak|backup|old|tmp)$ - [F,L]
+    
+    # Bloqueia acesso a arquivos lock do Composer
+    RewriteRule ^composer\.lock$ - [F,L]
+    
+    # Bloqueia acesso a README, CHANGELOG, etc
+    RewriteRule ^(README|CHANGELOG|LICENSE|\.gitignore)$ - [F,L]
+    
+    # ========================================================================
+    # REGRAS DE REESCRITA - Roteia requisições para index.php
+    # ========================================================================
+    
+    # Se o arquivo ou diretório não existir, passa para reescrita
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    
+    # Reescreve para index.php preservando a URI e query string
+    RewriteRule ^(.*)$ index.php?_uri=$1 [QSA,L]
+    
+</IfModule>
+
+# ============================================================================
+# CABEÇALHOS DE SEGURANÇA
+# ============================================================================
+
+<IfModule mod_headers.c>
+    # Impede que o navegador interprete o conteúdo de forma diferente
+    Header always set X-Content-Type-Options "nosniff"
+    
+    # Protege contra ataques de clickjacking
+    Header always set X-Frame-Options "SAMEORIGIN"
+    
+    # Ativa a proteção XSS do navegador
+    Header always set X-XSS-Protection "1; mode=block"
+    
+    # Controla o CORS (Cross-Origin Resource Sharing)
+    # Modifique conforme necessário para sua aplicação
+    Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type, Authorization"
+    
+    # Define a Política de Segurança de Conteúdo (CSP)
+    # Modifique conforme necessário
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:"
+    
+    # Desabilita MIME-sniffing
+    Header always set X-Permitted-Cross-Domain-Policies "none"
+    
+    # Força o HTTPS em produção (descomente se necessário)
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    
+</IfModule>
+
+# ============================================================================
+# COMPRESSÃO DE CONTEÚDO
+# ============================================================================
+
+<IfModule mod_deflate.c>
+    # Ativa compressão para os tipos de arquivo específicos
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE image/svg+xml
+    
+    # Exclui tipos de arquivo que não devem ser comprimidos
+    SetEnvIfNoCase Request_URI \.(?:gif|jpg|jpeg|png|ico|gz|rar|zip|exe)$ no-gzip
+    
+</IfModule>
+
+# ============================================================================
+# CACHE DO NAVEGADOR
+# ============================================================================
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+    
+    # Imagens
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+    
+    # Fontes
+    ExpiresByType application/font-woff "access plus 1 year"
+    ExpiresByType application/font-woff2 "access plus 1 year"
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType application/vnd.ms-fontobject "access plus 1 year"
+    ExpiresByType font/ttf "access plus 1 year"
+    ExpiresByType font/otf "access plus 1 year"
+    
+    # CSS e JavaScript
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType text/javascript "access plus 1 month"
+    
+    # Documentos HTML (cache curto para atualizar com frequência)
+    ExpiresByType text/html "access plus 1 week"
+    
+    # JSON
+    ExpiresByType application/json "access plus 1 week"
+    
+    # Padrão
+    ExpiresDefault "access plus 2 days"
+</IfModule>
+
+# ============================================================================
+# CONFIGURAÇÕES ADICIONAIS DE SEGURANÇA
+# ============================================================================
+
+# Desabilita listagem de diretórios
+<IfModule mod_autoindex.c>
+    Options -Indexes
+</IfModule>
+
+# Define o tipo padrão de conteúdo como UTF-8
+AddDefaultCharset utf-8
+
+# Adiciona tipos MIME adicionais
+AddType application/json .json
+AddType application/javascript .js
+AddType font/woff .woff
+AddType font/woff2 .woff2
+
+# ============================================================================
+# PROTEÇÃO CONTRA ACESSO NÃO AUTORIZADO
+# ============================================================================
+
+# Nega acesso a arquivos .htaccess
+<FilesMatch "^\.ht">
+    Deny from all
+</FilesMatch>
+
+# Nega acesso a scripts PHP em certos diretórios
+<FilesMatch "\.php$">
+    # Permite apenas em diretórios específicos
+    # Descomente para restringir execução de PHP
+    # Deny from all
+</FilesMatch>
+
+# ============================================================================
+# TRATAMENTO DE ERROS
+# ============================================================================
+
+# Redireciona erros 404 e 500 para a página apropriada
+# ErrorDocument 404 /error/404.html
+# ErrorDocument 500 /error/500.html
+
+# ============================================================================
+# FIM DO ARQUIVO .htaccess
+# ============================================================================
