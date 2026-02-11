@@ -70,7 +70,9 @@ try {
     // Obtém informações da requisição
     $method = $_SERVER['REQUEST_METHOD'];
     $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-    $baseUri = str_replace('/public_html/api/', '', $uri);
+    
+    // Remove prefixos comuns da URI para obter o caminho relativo à API
+    $baseUri = preg_replace('#^/api/?#', '', $uri);
     
     // Remove barra inicial e final
     $baseUri = trim($baseUri, '/');

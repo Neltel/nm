@@ -45,17 +45,17 @@ session_regenerate_id(true);
 // ============================================================================
 
 // Define o diretório raiz da aplicação
-define('ROOT_DIR', dirname(__DIR__));
+define('ROOT_DIR', __DIR__);
 define('PUBLIC_DIR', __DIR__);
-define('APP_DIR', ROOT_DIR . '/app');
+define('APP_DIR', __DIR__);
 
 // Define os diretórios de cada módulo
 define('ADMIN_DIR', APP_DIR . '/admin');
 define('TECNICO_DIR', APP_DIR . '/tecnico');
 define('CLIENTE_DIR', APP_DIR . '/cliente');
 define('API_DIR', APP_DIR . '/api');
-define('CONFIG_DIR', ROOT_DIR . '/config');
-define('LOG_DIR', ROOT_DIR . '/logs');
+define('CONFIG_DIR', __DIR__ . '/config');
+define('LOG_DIR', __DIR__ . '/logs');
 
 // Ambiente da aplicação
 define('ENV', getenv('APP_ENV') ?: 'production');
@@ -205,23 +205,20 @@ try {
     if ($primeiroSegmento === 'api') {
         header('Content-Type: application/json; charset=utf-8');
         
-        // Define o endpoint da API
-        $endpoint = $segundoSegmento ?? 'index';
-        $arquivoApi = API_DIR . '/' . $endpoint . '.php';
+        // Carrega o roteador da API
+        $arquivoApi = API_DIR . '/routes.php';
         
         if (!file_exists($arquivoApi)) {
-            erroJson(404, 'Endpoint de API não encontrado', [
-                'endpoint_solicitado' => $endpoint
-            ]);
+            erroJson(404, 'Roteador da API não encontrado');
         }
         
-        // Carrega o endpoint da API
+        // Carrega o roteador da API
         if (!carregarRota($arquivoApi, [
             'metodo' => $metodo,
             'uri' => $uri,
             'parametros' => $_GET
         ])) {
-            erroJson(500, 'Erro ao carregar endpoint da API');
+            erroJson(500, 'Erro ao carregar roteador da API');
         }
         exit;
     }

@@ -34,8 +34,9 @@ switch ($subroute) {
             sendError('Método não permitido', 405);
         }
         
-        // Valida entrada
-        if (empty($input['email']) || empty($input['senha'])) {
+        // Valida entrada (aceita 'senha' ou 'password')
+        $senha = $input['senha'] ?? $input['password'] ?? '';
+        if (empty($input['email']) || empty($senha)) {
             sendError('Email e senha são obrigatórios', 400);
         }
         
@@ -45,7 +46,7 @@ switch ($subroute) {
         }
         
         // Tenta fazer login
-        $resultado = $auth->login($input['email'], $input['senha']);
+        $resultado = $auth->login($input['email'], $senha);
         
         if (!$resultado) {
             sendError('Email ou senha inválidos', 401);
